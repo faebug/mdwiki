@@ -26,7 +26,6 @@ from colorama import init
 init()
 
 site = pywikibot.getSite('en', 'mdwiki') # ! Set up local family file for this to work
-DIR = '/Downloads/TEMP/' # Point to local storage to avoid upload-by-url rights
 
 def up(source, pagetitle, desc, comment, iw):
 	if source[:4] == 'http':
@@ -146,29 +145,6 @@ def uptry(source, filename, desc, comment, iw):
 						#print Fore.CYAN,'** ERROR Upload failed', Fore.WHITE
 						time.sleep(1)
 		return ''
-
-def search(v):
-		vcount=0
-		#print v
-		countErr=0
-		loop=True
-		plist = []
-		while loop:
-				try:
-						vgen = pagegenerators.SearchPageGenerator(v, namespaces = "6", total=1)
-						for vPage in vgen:
-								plist.append(vPage.title())
-								vcount+=1
-						loop=False
-				except:
-						loop=True
-						countErr+=1
-						print Fore.RED +"Problem running search, sleeping for",countErr,"seconds",Fore.WHITE
-						time.sleep(countErr)
-				if countErr>30:
-						loop=False
-						vcount=-1
-		return plist
 
 subs = [
 	['\t|\n', ' '],
