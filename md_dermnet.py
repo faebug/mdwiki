@@ -5,9 +5,10 @@ md_dermnet.py
 
 Task:
 Upload to wdwiki from DermNet NZ
+Categories need a second run for creation, trying to avoid empty categories
 
 Date
-	2021 February Create forked from some other Wikimedia Commons script
+	2021 February Create
 
 Author: Fæ
 Permissions: CC-BY-SA-4.0
@@ -25,7 +26,7 @@ from colorama import Fore, Back, Style
 from colorama import init
 init()
 
-site = pywikibot.getSite('en', 'mdwiki') # ! Set up local family file for this to work
+site = pywikibot.getSite('en', 'mdwiki')
 
 def up(source, pagetitle, desc, comment, iw):
 	if source[:4] == 'http':
@@ -193,6 +194,8 @@ req = requests.get(topurl)
 html = req.text
 gsoup = BeautifulSoup(html)
 topics = gsoup.findAll('a', href=re.compile(".*/topics/.*"))
+topiclist = set()
+catthtml = "[[Category:Skin topics]]"
 count = 0
 print len(topics)
 for a in topics:
@@ -200,12 +203,27 @@ for a in topics:
 	if len(turl)<10: continue
 	turl = domain + turl
 	print Fore.GREEN, turl
-	tsoup = BeautifulSoup(requests.get(turl).text)
+	try:
+		tsoup = BeautifulSoup(requests.get(turl).text)
+	except Exception as e:
+		print Fore.MAGENTA, str(e), Fore.WHITE
+		continue
 	try:
 		topic = tsoup.find('h1').text
 	except:
 		continue
 	details = tsoup.findAll('a', href=re.compile("^imagedetail.*"))
+	if len(details)==0:
+		continue
+	if not topic in topiclist:
+		topiclist.add(topic)
+		catt = pywikibot.Category(site, u'Category:' + topic)
+		lencatt = len([a for a in catt.articles()])
+		if lencatt !=0:
+			print Fore.CYAN, topic, "({})".format(lencatt), Fore.WHITE
+			if not catt.exists():
+				pywikibot.setAction('Create category from DermNet topic')
+				catt.put(catthtml)
 	for i in details:
 		desc = u"" + i.findNext('p').text
 		durl = domain + '/' + i['href']
@@ -227,7 +245,7 @@ for a in topics:
 		dd += "\n|source = [" + durl + " dermnetnz.org]"
 		dd += "\n* Gallery page: " + turl
 		dd += "\n|author = DermNet New Zealand"
-		dd += "\n|date = 2021-02-18"
+		dd += "\n|date = 2021-02-20"
 		dd += "\n}}\n"'''
 		#
 		dd += "\n:Description: " + desc
